@@ -1,0 +1,47 @@
+{
+  "manifest_version": 3,
+  "name": "download-linkedin-resumes",
+  "version": "1.0.0",
+  "description": "Downloads resumes of new LinkedIn job applicants, skipping the ones already downloaded.",
+  "permissions": [
+    "storage",
+    "downloads",
+    "tabs",
+    "activeTab",
+    "debugger",
+    "nativeMessaging"
+  ],
+  "host_permissions": [
+    "https://*.linkedin.com/*",
+    "https://*.licdn.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "download-linkedin-resumes",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/16.png",
+      "48": "icons/48.png",
+      "128": "icons/128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/16.png",
+    "48": "icons/48.png",
+    "128": "icons/128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.linkedin.com/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEArsmzcOtYz0iPSC2FKqw5Zk/n5nKNXSJroihGK/B/eWYcKKdb5t/boDfGxpjR59J4kAXBbG9X3Lrk4ZarPXLPLjpJD4Y13BYl04J4WahXOG+Bws81Ok6WfSG/KHGuwZ9wTQmF9sEN3wcz+wKYJ4SUx0sJVnF/KpDnqpZrStTcMnvTkWar8KinEF9Rzs2V2JdB7PGuVMoQfr/Kp/nAG7aIQtn0jEuysNSZsFZQDwzZAY+0xFdN7fwIbPQoSj/v7O9y0Rybr1yydCrF2lglcGU1TCy7s5MdzDehdkarxqprPE/C+MtYOljo77CqlEhpcLZyBZYjIcf9Sz8AhQ+bxSaVBQIDAQAB"
+}

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  body { width: 280px; margin: 0; padding: 16px; font: 13px/1.4 -apple-system, "Segoe UI", Roboto, sans-serif; color: #1d2226; }
+  h1 { font-size: 14px; margin: 0 0 12px; }
+  #start { width: 100%; padding: 10px; border: 0; border-radius: 20px; background: #0a66c2; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; }
+  #start:hover { background: #004182; }
+  #start:disabled { background: #9bb8d3; cursor: default; }
+  #status { margin: 12px 0 4px; min-height: 18px; color: #444; word-break: break-word; }
+  #status.err { color: #b24020; }
+  .row { display: flex; align-items: center; gap: 6px; margin-top: 10px; font-size: 12px; color: #555; }
+  .foot { display: flex; justify-content: space-between; margin-top: 12px; font-size: 12px; color: #666; }
+  a { color: #0a66c2; cursor: pointer; text-decoration: underline; }
+</style>
+</head>
+<body>
+  <h1>download-linkedin-resumes</h1>
+  <button id="start">Start download</button>
+  <div id="status"></div>
+  <label class="row"><input type="checkbox" id="closeTab" checked> Close resume tab after saving</label>
+  <label class="row">Wait between steps: <input type="number" id="stepDelay" min="1" max="30" value="3" style="width:46px"> sec</label>
+  <div class="foot">
+    <span id="count"></span>
+    <span><a id="copylog">Copy log</a> &nbsp;·&nbsp; <a id="clear">Clear history</a></span>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>
