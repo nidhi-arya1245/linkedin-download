@@ -6,6 +6,24 @@ A Chrome extension that goes through the applicants of a LinkedIn job, opens eac
 
 ---
 
+## What it does
+
+For every applicant that is not yet in the history, on every page of the list:
+
+1. Click the applicant in the left list.
+2. Wait for the details on the right, find the **Resume** link (top right) and click it.
+3. In the popup that opens, click **Download**.
+4. The resume opens in a new tab (Chrome's PDF viewer).
+5. Click **Save to Google Drive** in the viewer's toolbar.
+6. Chrome shows a "Choose your account" popup. Press **Tab, Tab, Enter** (and Space) to hit **Save**.
+7. Wait, close the resume tab, record the applicant in the history, move on.
+
+When the current page has no new applicants left, it clicks the next page number (`Page 2`, `Page 3`, …) and repeats until the last page.
+
+A **wait of the same length** (default 3 s, set in the popup) follows every action.
+
+---
+
 ## Folder layout
 
 ```

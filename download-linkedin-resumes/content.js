@@ -192,25 +192,60 @@
     }) || null;
   }
 
+  // Scroll the left list to its end so lazily-rendered cards appear. Returns true if more cards showed up.
   async function loadMoreInList() {
     const list = cards();
     if (!list.length) return false;
     const before = list.length;
     const sp = scrollParent(list[list.length - 1]);
     sp.scrollTo({ top: sp.scrollHeight, behavior: 'instant' });
-    await pause('scrolled list, waiting for more applicants');
-    return cards().length > before;
+    // poll (returns as soon as new cards appear; gives up after 2s at the end of the list)
+    return !!(await waitFor(() => cards().length > before, 2000, 200));
   }
 
+  // ---- Pagination: <ul data-testid="pagination-controls-list"> with buttons aria-label="Page N" ----
+  const PAGE_LIST_SEL = '[data-testid="pagination-controls-list"]';
+  const pageNo = (btn) => {
+    const m = /(\d+)/.exec(btn.getAttribute('aria-label') || btn.textContent || '');
+    return m ? Number(m[1]) : null;
+  };
+  const currentPage = () => {
+    const b = document.querySelector(`${PAGE_LIST_SEL} button[aria-current="true"]`);
+    return b ? pageNo(b) : null;
+  };
+
   async function goNextPage() {
-    const wrap = document.querySelector(NEXT_PAGE_SEL);
-    if (!wrap) return false;
-    const btn = wrap.matches('button, a, [role="button"]') ? wrap : wrap.querySelector('button, a, [role="button"]') || wrap;
-    if (btn.disabled || btn.getAttribute('aria-disabled') === 'true') return false;
+    const cur = currentPage();
+    let btn = null;
+
+    // smallest page number higher than the current one
+    if (cur != null) {
+      const higher = [...document.querySelectorAll(`${PAGE_LIST_SEL} button`)]
+        .map((b) => ({ b, n: pageNo(b) }))
+        .filter((x) => x.n != null && x.n > cur)
+        .sort((x, y) => x.n - y.n);
+      if (higher.length) btn = higher[0].b;
+    }
+    // fallback: a "next" arrow, if LinkedIn shows one
+    if (!btn) {
+      const wrap = document.querySelector(NEXT_PAGE_SEL);
+      if (wrap) {
+        const cand = wrap.matches('button, a, [role="button"]') ? wrap : wrap.querySelector('button, a, [role="button"]') || wrap;
+        if (!cand.disabled && cand.getAttribute('aria-disabled') !== 'true') btn = cand;
+      }
+    }
+    if (!btn) return false; // no further pages
+
     const firstBefore = cards()[0] && idOfCard(cards()[0]);
+    btn.scrollIntoView({ block: 'center' });
     btn.click();
-    await waitFor(() => cards()[0] && idOfCard(cards()[0]) !== firstBefore, 8000);
-    await pause('next page loaded');
+    const changed = await waitFor(
+      () => (cur != null && currentPage() !== cur) || (cards()[0] && idOfCard(cards()[0]) !== firstBefore),
+      10000
+    );
+    if (!changed) return false;
+    await pause(`page ${currentPage() ?? '?'} loaded`);
+    cards()[0]?.scrollIntoView({ block: 'start' });
     return true;
   }
 
@@ -219,6 +254,7 @@
     stopRequested = false;
     skippedThisRun.clear();
     let processed = 0;
+    let pageProcessed = 0;
     try {
       await chrome.storage.local.set({ running: true });
       await loadSettings();
@@ -234,6 +270,7 @@
           try {
             await processCard(card);
             processed++;
+            pageProcessed++;
           } catch (e) {
             if (e instanceof Stopped) throw e;
             console.warn('[ldr] failed on', idOfCard(card), e);
@@ -243,6 +280,12 @@
           continue;
         }
         if (await loadMoreInList()) continue;
+        // this page is finished (every card is either in history or failed this run)
+        const hist = await getHistory();
+        const onPage = cards();
+        const already = onPage.filter((x) => hist[idOfCard(x)]).length - pageProcessed;
+        setStatus(`page ${currentPage() ?? '?'} finished: ${pageProcessed} processed now, ${Math.max(0, already)} already in history`);
+        pageProcessed = 0;
         if (await goNextPage()) continue;
         break;
       }
